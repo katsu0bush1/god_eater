@@ -155,20 +155,33 @@ var WEAK={1:.002,2:.004,3:.006,4:.008,5:.010,6:.012};
 var WEAKR={1:0.2,2:0.4,3:0.6,4:0.8,5:1.0,6:1.2};
 /* 準確定示唆（実戦上の情報や「濃厚!?」表記）の重み。設定を切り捨てず強く傾けるだけ */
 var QPEN=0.08;
+/* 示唆演出の「低設定（ほぼ設定1）における出現割合」＝実測値。
+   これが無いと『示唆が出た時だけ加点し、デフォルトが出た時に減点しない』片側評価になり、
+   打てば打つほど高設定に寄ってしまうため、正規化に使用する。
+   終了画面 n=147 / ボイス n=720 の実測サンプル（ユウは否定示唆のため除外して再正規化）。 */
+var SOFTG=[
+ {items:"end",base:{eNone:.621,eArisa:.221,eKota:.089,eSakuya:.049,eSoma:.020}},
+ {items:"voice",base:{vKota:.311,vArisa:.329,vHibari:.197,vSoma:.104,vSakuya:.046,vRen:.013}}];
 /* 通常滞在時 チャンス目からのCZ当選率（参考表示のみ） */
 var CMR={1:15.8,2:17.2,3:19.1,4:21.1,5:23.4,6:24.9};
-/* 示唆演出の重み（公開解析に出現率がないため傾向からの推定値。トグルでOFF可） */
+/* 示唆演出の重み（設定1に対する倍率）＝実戦値レンジから算出
+   ソーマボイス/コウタ画面(高設定示唆・弱): 設1 10.4% → 設6 17%   （1.00〜1.63倍）
+   レンボイス/ソーマ画面(高設定示唆・強): 設1 1.3% → 設6 7%       （1.00〜5.38倍）
+   偶数示唆は実測レンジ未判明のため、弱示唆の伸び幅を参考にした推定値のまま */
 var SOFT={
- hiA:{1:1,2:1.1,3:1.3,4:1.6,5:1.9,6:2.2},
- hiB:{1:1,2:1.2,3:1.6,4:2.2,5:2.8,6:3.4},
- evenA:{1:1,2:2.0,3:1,4:2.0,5:1,6:2.0},
- evenB:{1:1,2:3.0,3:1,4:3.0,5:1,6:3.0}};
+ hiA:{1:1,2:1.13,3:1.25,4:1.38,5:1.51,6:1.63},
+ hiB:{1:1,2:1.88,3:2.75,4:3.63,5:4.51,6:5.38},
+ evenA:{1:1,2:1.4,3:1,4:1.4,5:1,6:1.4},
+ evenB:{1:1,2:2.2,3:1,4:2.2,5:1,6:2.2}};
+/* 規定ゲーム数ゾーンでの当選率（大量実戦値・約2倍の設定差） */
+var ZONE=[
+ {l:"200Gゾーン",lo:190,hi:265,r:{1:.080,2:.094,3:.108,4:.122,5:.136,6:.150}},
+ {l:"450Gゾーン",lo:440,hi:520,r:{1:.100,2:.120,3:.140,4:.160,5:.180,6:.200}}];
 
 /* ===== イベント ===== */
 var EVS=[
  {id:"at",l:"AT当選",s:"アラガミバースト",c:"#ff5252",cat:"at"},
  {id:"cz",l:"CZ",s:"防衛戦/殲滅",c:"#42a5f5",cat:"cz"},
- {id:"kyo",l:"強チェリー",s:"直撃抽選",c:"#ffa726",cat:"kyo"},
  {id:"atend",l:"AT終了",s:"画面/ボイス",c:"#ce93d8",cat:"atend"},
  {id:"joui",l:"上位/特化",c:"#80cbc4",cat:"joui"},
  {id:"ensh",l:"演出/示唆",c:"#9fa8da",cat:"enshutsu"},
@@ -180,21 +193,23 @@ var AT_KIK=[{id:"g",l:"規定ゲーム数"},{id:"cz",l:"CZ経由"},{id:"choku",l
  {id:"tenjou",l:"天井(1000G/600G)"},{id:"joui",l:"上位AT/引き戻し"},{id:"fumei",l:"不明"}];
 var CZ_TYPE=[{id:"bouei",l:"アラガミ防衛戦"},{id:"senmetsu",l:"殲滅モード",s:"上位CZ"}];
 var CZ_KIK=[{id:"weak",l:"弱チェリー",s:"設定差大"},{id:"suika",l:"スイカ",s:"設定差大"},
- {id:"cm",l:"チャンス目"},{id:"g",l:"規定G数/その他"},{id:"fumei",l:"不明"}];
+ {id:"kyo",l:"強チェリー",s:"55.2% 全設定共通"},{id:"cm",l:"チャンス目"},{id:"g",l:"規定G数/その他"},{id:"fumei",l:"不明"}];
 var CZ_RES=[{id:"s",l:"成功(AT当選)"},{id:"f",l:"失敗"}];
+var RARE_T=[{id:"kyo",l:"強チェリー(変換含む)"},{id:"weak",l:"弱チェリー/スイカ"}];
 var KYO_RES=[{id:"hit",l:"AT直撃"},{id:"miss",l:"直撃せず"}];
+var WEAK_RES=[{id:"cz",l:"CZ当選"},{id:"none",l:"当選せず"}];
 var JOUI_T=[{id:"shikkoku",l:"漆黒の捕喰者",s:"上位AT"},{id:"kamiwo",l:"神を喰らえ"},
  {id:"kakusei",l:"神機覚醒",s:"上位報酬"},{id:"fang",l:"フェンリルファング"},
  {id:"hannibal",l:"逆鱗ハンニバル討伐戦"},{id:"gate",l:"リザレクションゲート"},{id:"kamiochi",l:"神堕"}];
 
 /* AT終了画面（示唆） */
 var ENDSCR=[
- {k:"eNone",l:"キャラなし",s:"基本パターン"},
- {k:"eKota",l:"コウタ",s:"高設定示唆A",soft:"hiA"},
- {k:"eArisa",l:"アリサ",s:"偶数示唆A",soft:"evenA"},
- {k:"eSoma",l:"ソーマ",s:"高設定示唆B",soft:"hiB"},
- {k:"eSakuya",l:"サクヤ",s:"偶数示唆B",soft:"evenB"},
- {k:"eYu",l:"ユウ",h:"設2･3･4否定",m:[1,5,6]},
+ {k:"eNone",l:"キャラなし",s:"デフォ／低設定実測 61.2%"},
+ {k:"eKota",l:"コウタ",s:"高設定示唆(弱)／低設定実測 8.8%",soft:"hiA"},
+ {k:"eArisa",l:"アリサ",s:"偶数示唆(弱)／低設定実測 21.8%",soft:"evenA"},
+ {k:"eSoma",l:"ソーマ",s:"高設定示唆(強)／低設定実測 2.0%",soft:"hiB"},
+ {k:"eSakuya",l:"サクヤ",s:"偶数示唆(強)／低設定実測 4.8%",soft:"evenB"},
+ {k:"eYu",l:"ユウ",h:"設2･3･4否定",s:"低設定実測 1.4%",m:[1,5,6]},
  {k:"eRindo",l:"リンドウ",h:"設3以上濃厚",m:[3,4,5,6]},
  {k:"eShio",l:"シオ",h:"設4以上濃厚",m:[4,5,6]},
  {k:"eCafe",l:"カフェ",h:"偶数濃厚",m:[2,4,6]},
@@ -202,12 +217,12 @@ var ENDSCR=[
  {k:"eFemale",l:"女性キャラ集合(デフォルメ)",h:"設6濃厚",m:[6],hi:1}];
 /* ストーリーパート終了時ボイス（エンディング中のレア役タッチも同じ） */
 var VOICE=[
- {k:"vKota",l:"コウタ「一緒にバガラリー見ようぜ！」",s:"デフォルト"},
- {k:"vArisa",l:"アリサ「側面、後方ともにクリアです！」",s:"デフォルト"},
- {k:"vHibari",l:"ヒバリ「私にもお役に立てることが〜」",s:"偶数示唆A",soft:"evenA"},
- {k:"vSakuya",l:"サクヤ「私のやるべきことを〜」",s:"偶数示唆B",soft:"evenB"},
- {k:"vSoma",l:"ソーマ「思い出ってのは〜」",s:"高設定示唆A",soft:"hiA"},
- {k:"vRen",l:"レン「貴方はそのアラガミを殺せますか？」",s:"高設定示唆B",soft:"hiB"},
+ {k:"vKota",l:"コウタ「一緒にバガラリー見ようぜ！」",s:"デフォ／低設定実測 31.1%"},
+ {k:"vArisa",l:"アリサ「側面、後方ともにクリアです！」",s:"デフォ／低設定実測 32.9%"},
+ {k:"vHibari",l:"ヒバリ「私にもお役に立てることが〜」",s:"偶数示唆(弱)／低設定実測 19.7%",soft:"evenA"},
+ {k:"vSakuya",l:"サクヤ「私のやるべきことを〜」",s:"偶数示唆(強)／低設定実測 4.6%",soft:"evenB"},
+ {k:"vSoma",l:"ソーマ「思い出ってのは〜」",s:"高設定示唆(弱)／低設定実測 10.4%",soft:"hiA"},
+ {k:"vRen",l:"レン「貴方はそのアラガミを殺せますか？」",s:"高設定示唆(強)／低設定実測 1.3%",soft:"hiB"},
  {k:"vYu",l:"ユウ「信じられる仲間がいるから〜」",h:"設2･3否定",m:[1,4,5,6]},
  {k:"vErina",l:"エリナ「大きくなったら〜」",h:"設2･4･6濃厚",m:[2,4,6]},
  {k:"vRindo",l:"リンドウ「お前の背中は預かってやる」",h:"設2以上濃厚",m:[2,3,4,5,6]},
@@ -256,7 +271,7 @@ var CNTS=[
  {id:"rare",t:"🍒 レア役からの当選（設定差大）",items:[
    {k:"kyoT",l:"強チェリー回数(変換含む)",s:"通常時のみカウント"},
    {k:"kyoH",l:"↑うちAT直撃",s:"設1:0.4% → 設6:5.9%（約15倍差）"},
-   {k:"wT",l:"弱チェリー/スイカ 回数",s:"通常ステージ滞在中のみ。入れると下段が正しい確率計算になります"},
+   {k:"wT",l:"弱チェリー/スイカ 回数",s:"通常ステージ滞在中の総回数。外れた回も含めて入れると下段が正しい確率計算になります"},
    {k:"wCZ",l:"↑うちCZ当選",s:"設1:0.2% → 設6:1.2%（約6倍差）"},
    {k:"cmCZ",l:"チャンス目からのCZ当選",s:"設1:15.8% → 設6:24.9%（参考表示のみ）"}]},
  {id:"end",t:"🖼️ AT終了画面",items:ENDSCR},
@@ -307,6 +322,13 @@ function estimate(){
  if(tG>=1000&&st.at>0){used=true;
   for(i=0;i<SETS.length;i++){s=SETS[i];var p=1/ATX[s];ll[s]+=st.at*Math.log(p)+(tG-st.at)*Math.log(1-p);}
   reasons.push("AT初当たり 1/"+Math.round(tG/st.at));}
+ // 規定Gゾーン当選率（AT記録のG数から自動判定。CZ経由等でゾーン内当選した回は打ち切り扱いで除外）
+ ZONE.forEach(function(z){var tr=0,hk=0;
+  for(var j=0;j<LOG.length;j++){var e=LOG[j];if(e.ev!=="at")continue;var g=parseInt(e.g)||0;
+   if(g<z.lo)continue;
+   if(g<=z.hi){if(e.kik==="g"){tr++;hk++}}
+   else tr++;}
+  if(tr>=2)bino(hk,tr,z.r,z.l);});
  // CZ：AT当選分と重複しない「AT非当選に終わったCZ」のみを独立証拠として使う
  var czFail=st.cz-st.czS;
  if(tG>=1000&&czFail>0){used=true;
@@ -315,11 +337,11 @@ function estimate(){
   reasons.push("CZ失敗 "+czFail+"/"+st.cz+"（AT分と非重複）");}
  // 強チェリー直撃（分母あり＝正規の二項）
  if(CC.kyoT>0)bino(Math.min(CC.kyoH,CC.kyoT),CC.kyoT,CHOKU,"強チェ直撃");
- // 弱チェ/スイカ→CZ：分母があれば正規の二項、無ければ減衰させた出現比
- if(CC.wT>0)bino(Math.min(CC.wCZ,CC.wT),CC.wT,WEAK,"弱チェ/スイカ→CZ");
+ // 弱チェ/スイカ→CZ：外した回数まで入っている時だけ正規の二項、そうでなければ減衰した出現比
+ if(CC.wT>CC.wCZ)bino(CC.wCZ,CC.wT,WEAK,"弱チェ/スイカ→CZ");
  else if(CC.wCZ>0){used=true;
   for(i=0;i<SETS.length;i++){s=SETS[i];ll[s]+=0.5*CC.wCZ*Math.log(WEAKR[s]);}
-  reasons.push("弱チェ/スイカ→CZ "+CC.wCZ+"回（分母なし・減衰）");}
+  reasons.push("弱チェ/スイカ→CZ "+CC.wCZ+"回（母数不足・減衰）");}
  // 示唆演出（ハード制約 / 準確定の重み / 推定重み）
  SIG.forEach(function(it){var n=CC[it.k];if(!n)return;
   if(it.m){var mm={};it.m.forEach(function(x){mm[x]=1});
@@ -330,6 +352,14 @@ function estimate(){
    conf.push(it.l+"→"+it.h);}
   else if(it.soft&&USE_SOFT){used=true;
    for(i=0;i<SETS.length;i++){s=SETS[i];ll[s]+=n*Math.log(SOFT[it.soft][s]);}}});
+ // 正規化：デフォルト（示唆なし）が出たことも「高設定ではない証拠」として引く
+ if(USE_SOFT)SOFTG.forEach(function(g){
+  var arr=(g.items==="end")?ENDSCR:VOICE,nObs=0;
+  arr.forEach(function(it){if(g.base[it.k])nObs+=CC[it.k]});
+  if(!nObs)return;
+  for(i=0;i<SETS.length;i++){s=SETS[i];var Z=0;
+   arr.forEach(function(it){var b=g.base[it.k];if(b)Z+=b*(it.soft?SOFT[it.soft][s]:1)});
+   ll[s]-=nObs*Math.log(Z);}});
  // 入力の整合性チェック
  var warn=[];
  if(CC.kyoH>CC.kyoT)warn.push("強チェ直撃 "+CC.kyoH+"回 > 強チェ "+CC.kyoT+"回");
@@ -418,11 +448,7 @@ function rRec(){var ct=document.getElementById("ct"),h='<div class="rec">';
    h+='<div style="font-size:9px;color:rgba(255,255,255,.32);margin-top:6px">規定G数は100/200/300/450/600/750/1000G+α。高設定ほど200G・450Gでの当選率が高い可能性あり。</div></div>';}
   if(ev.cat==="cz"){h+=detRow("CZ種別",CZ_TYPE,"type",curType)+detRow("突入契機",CZ_KIK,"kik",curKik)+detRow("結果",CZ_RES,"res",curRes);
    h+='<div style="font-size:9px;color:rgba(255,255,255,.34);margin-top:-4px;line-height:1.5">内部状態「通常」滞在時の<b style="color:#ff8a80">弱チェリー/スイカからのCZ当選は約6倍の設定差</b>（設1:0.2%→設6:1.2%）。高確以上では設定差がないため、通常ステージでの当選ほど価値が高いです。</div>';}
-  if(ev.cat==="kyo"){h+=detRow("結果",KYO_RES,"res",curRes);
-   h+='<div style="font-size:9px;color:rgba(255,255,255,.34);margin-top:-4px;line-height:1.5">通常時の強チェリー（チェリー変換での出現も含む）を1回ずつ記録。AT直撃は設1:0.4%→設6:5.9%と約15倍差で、本機で最も強い判別要素です。</div>';}
   if(ev.cat==="atend"){
-   h+=sigRow("AT終了画面",ENDSCR,"scr",curScr);
-   h+=sigRow("ストーリー終了ボイス（サブ液晶タッチ）",VOICE,"voice",curVoice);
    h+=sigRow("枚数/連打/タイマー 示唆",CONF,"conf",curConf);
    h+='<div class="dt"><div class="dt-t">獲得枚数（記録用）</div><input type="number" inputmode="numeric" class="dt-f" id="iMai" value="'+esc(curMai)+'" placeholder="枚数"></div>';}
   if(ev.cat==="joui")h+=detRow("種別",JOUI_T,"type",curType);
@@ -444,8 +470,7 @@ function rRec(){var ct=document.getElementById("ct"),h='<div class="rec">';
 function canAdd(){if(!curEv)return false;var ev=EVMAP[curEv];
  if(ev.cat==="at")return!!curKik;
  if(ev.cat==="cz")return!!(curType&&curKik&&curRes);
- if(ev.cat==="kyo")return!!curRes;
- if(ev.cat==="atend")return!!(curScr||curVoice||curConf||curMai);
+ if(ev.cat==="atend")return true;
  if(ev.cat==="joui")return!!curType;
  if(ev.cat==="enshutsu")return!!(curCat&&curOpt);
  return true}
@@ -453,8 +478,8 @@ function canAdd(){if(!curEv)return false;var ev=EVMAP[curEv];
 function sigLabel(k){for(var i=0;i<SIG.length;i++)if(SIG[i].k===k)return SIG[i].l+(SIG[i].h?"("+SIG[i].h+")":(SIG[i].s?"("+SIG[i].s+")":""));return k}
 function buildNote(e){var b=[],f;
  if(e.kik){f=AT_KIK.concat(CZ_KIK).filter(function(x){return x.id===e.kik})[0];if(f)b.push(f.l)}
- if(e.type){f=CZ_TYPE.concat(JOUI_T).filter(function(x){return x.id===e.type})[0];if(f)b.push(f.l)}
- if(e.res){f=CZ_RES.concat(KYO_RES).filter(function(x){return x.id===e.res})[0];if(f)b.push(f.l)}
+ if(e.type){f=CZ_TYPE.concat(JOUI_T,RARE_T).filter(function(x){return x.id===e.type})[0];if(f)b.push(f.l)}
+ if(e.res){f=CZ_RES.concat(KYO_RES,WEAK_RES).filter(function(x){return x.id===e.res})[0];if(f)b.push(f.l)}
  if(e.scr&&e.scr!=="none")b.push("画面:"+sigLabel(e.scr));
  if(e.voice&&e.voice!=="none")b.push("ボイス:"+sigLabel(e.voice));
  if(e.conf&&e.conf!=="none")b.push("★"+sigLabel(e.conf));
@@ -518,6 +543,18 @@ var INFO=[
    ["ユウ","設定2･3否定"],["エリナ","設定2･4･6濃厚",2],
    ["リンドウ","設定2以上濃厚",2],["シオ","設定5以上濃厚",5]],
   note:"ストーリーパート終了画面でサブ液晶をタッチすると発生。エンディング中のレア役成立時にサブ液晶をタッチしても同じ示唆ボイスが出るので、必ずタッチを。"},
+ {id:"i_sample",t:"📐 低設定サンプル実測値（重要）",rows:[
+   ["終了画面 キャラなし","61.2%（90/147）"],["アリサ 偶数示唆(弱)","21.8%（32/147）"],
+   ["コウタ 高設定示唆(弱)","8.8%（13/147）"],["サクヤ 偶数示唆(強)","4.8%（7/147）"],
+   ["ソーマ 高設定示唆(強)","2.0%（3/147）"],["ユウ 設2･3･4否定","1.4%（2/147）"],
+   ["ボイス アリサ/コウタ デフォ","32.9% / 31.1%（n=720）"],["ヒバリ 偶数示唆(弱)","19.7%（142/720）"],
+   ["ソーマ 高設定示唆(弱)","10.4%（75/720）"],["サクヤ 偶数示唆(強)","4.6%（33/720）"],
+   ["レン 高設定示唆(強)","1.3%（9/720）"],
+   ["★ソーマボイス 設1→設6","約10% → 約17%（1.6倍）",4],
+   ["★レンボイス 設1→設6","約1.3% → 約7%（5.4倍）",6],
+   ["★200Gゾーン当選率 設1→設6","約8% → 約15%（約2倍）",4],
+   ["★450Gゾーン当選率 設1→設6","約10% → 約20%（約2倍）",4]],
+  note:"ほぼ設定1と見られる台の実測サンプル。注目すべきは、偶数示唆(弱)のアリサ21.8%・ヒバリ19.7%、高設定示唆(弱)のコウタ8.8%・ソーマ10.4%が低設定でも普通に出ている点。つまり弱示唆は単発ではほぼ無価値です。本ツールはこの実測値を基準（設定1のアンカー）として正規化しており、弱示唆を引いても推定はわずかしか動きません。★印は大量実戦値による設定1〜6のレンジで、重み計算に直接使用しています。レンボイスは5.4倍差と、示唆演出の中では突出して価値が高い要素です。200G/450Gゾーンの当選率はAT記録のG数から自動判定されます（CZ経由でゾーン内当選した回は打ち切り扱いで除外）。"},
  {id:"i_conf",t:"🏆 枚数・連打・タイマーの確定示唆",rows:[
    ["獲得枚数表示 246枚","偶数設定濃厚",2],["456枚","設定4以上濃厚",4],["555枚","設定5以上濃厚",5],["666枚","設定6濃厚",6],
    ["連打上乗せ +44枚","設定4以上濃厚",4],["+55枚","設定5以上濃厚",5],["+66枚","設定6濃厚",6],
@@ -597,14 +634,8 @@ function rExp(){var ct=document.getElementById("ct"),E=estimate(),s=stats(),tG=t
 function addEntry(){if(!canAdd())return;var e={ev:curEv,ck:[]},ev=EVMAP[curEv];
  function bump(k){if(k in CC){CC[k]++;e.ck.push(k)}}
  if(ev.cat==="at"){e.kik=curKik;e.g=curG||"0";HAMARI="";}
- if(ev.cat==="cz"){e.type=curType;e.kik=curKik;e.res=curRes;
-  if(curRes==="s"||curRes==="f"){ /* CZ突入自体をカウント */ }
-  if(curKik==="weak"||curKik==="suika"){bump("wT");bump("wCZ");}
-  if(curKik==="cm")bump("cmCZ");}
- if(ev.cat==="kyo"){e.res=curRes;bump("kyoT");if(curRes==="hit")bump("kyoH");}
+ if(ev.cat==="cz"){e.type=curType;e.kik=curKik;e.res=curRes;}
  if(ev.cat==="atend"){
-  if(curScr){e.scr=curScr;if(curScr!=="none")bump(curScr)}
-  if(curVoice){e.voice=curVoice;if(curVoice!=="none")bump(curVoice)}
   if(curConf){e.conf=curConf;if(curConf!=="none")bump(curConf)}
   if(curMai)e.mai=curMai;}
  if(ev.cat==="joui")e.type=curType;
