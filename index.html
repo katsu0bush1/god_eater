@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GE-R">
+<meta name="theme-color" content="#08090c">
+<title>ゴッドイーター リザレクション 設定判別</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overscroll-behavior:none}
+body{background:#08090c;color:#e3e6ea;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic ProN',sans-serif;font-size:14px;-webkit-font-smoothing:antialiased}
+button{touch-action:manipulation;font-family:inherit;cursor:pointer;border:none;outline:none;color:inherit}
+input{font-family:inherit}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+input[type=number]{-moz-appearance:textfield}
+#W{max-width:540px;margin:0 auto;display:flex;flex-direction:column;height:100vh;height:100dvh}
+#top{flex-shrink:0;background:rgba(12,13,18,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(229,57,53,.22);padding-top:env(safe-area-inset-top,0px)}
+#ct{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#tabs{display:flex;background:rgba(11,12,16,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,.06);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
+.tb{flex:1;padding:8px 0 6px;text-align:center;font-size:9px;font-weight:600;color:rgba(255,255,255,.32)}
+.tb.a{color:#ff5252}.tb-ic{font-size:19px;display:block;margin-bottom:2px}
+
+.hr{display:flex;align-items:center;justify-content:space-between;padding:9px 14px 6px}
+.ht{font-size:14px;font-weight:900;letter-spacing:.03em;background:linear-gradient(135deg,#ffffff,#ff5252 60%,#b71c1c);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hs{font-size:10px;color:rgba(255,255,255,.38);margin-top:1px}
+.hb{padding:5px 11px;border-radius:8px;font-size:11px;font-weight:700;background:rgba(229,57,53,.08);border:1px solid rgba(229,57,53,.28);color:#ff8a80}
+.hb.p{background:rgba(229,57,53,.24);border-color:rgba(229,57,53,.6);color:#fff}
+
+.est{padding:2px 14px 10px}
+.est-top{display:flex;align-items:baseline;gap:8px;margin-bottom:7px}
+.est-lb{font-size:10px;color:rgba(255,255,255,.35);font-weight:600}
+.est-main{font-size:20px;font-weight:900}
+.est-conf{font-size:11px;color:rgba(255,255,255,.4);margin-left:auto}
+.bars{display:flex;flex-direction:column;gap:3px}
+.bar-row{display:flex;align-items:center;gap:7px}
+.bar-s{width:28px;font-size:12px;font-weight:800;text-align:center;border-radius:5px;padding:1px 0}
+.bar-track{flex:1;height:14px;background:rgba(255,255,255,.05);border-radius:7px;overflow:hidden}
+.bar-fill{height:100%;border-radius:7px;transition:width .35s cubic-bezier(.4,0,.2,1)}
+.bar-pct{width:42px;text-align:right;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.oe{display:flex;gap:6px;margin-top:7px}
+.oe-c{flex:1;padding:5px 8px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);text-align:center;font-size:10px;color:rgba(255,255,255,.4)}
+.oe-c b{display:block;font-size:14px;font-weight:800;margin-top:1px}
+.rng{margin-top:8px;padding:6px 10px;border-radius:9px;font-size:11px;font-weight:700;text-align:center}
+.est-note{font-size:9px;color:rgba(255,255,255,.32);margin-top:6px;line-height:1.45}
+.est-note b{color:rgba(255,255,255,.5)}
+.qs{display:flex;gap:5px;flex-wrap:wrap;padding:7px 14px;background:rgba(8,9,13,.6);border-top:1px solid rgba(255,255,255,.04);font-size:10px}
+.qc{background:rgba(255,255,255,.04);border-radius:7px;padding:3px 8px;border:1px solid rgba(255,255,255,.05)}
+.ql{color:rgba(255,255,255,.32);margin-right:3px}.qv{color:#ff8a80;font-weight:700}
+
+.rec{padding:11px 12px 22px}
+.rowg{display:flex;gap:8px;align-items:center;margin-bottom:9px}
+.rowg label{font-size:11px;color:rgba(255,255,255,.42);font-weight:600;white-space:nowrap}
+.gin{width:84px;height:40px;background:rgba(255,255,255,.05);border:1px solid rgba(229,57,53,.22);border-radius:11px;color:#ff8a80;font-size:17px;font-weight:800;text-align:center;outline:none;font-family:ui-monospace,monospace}
+.gin:focus{border-color:rgba(255,138,128,.6);background:rgba(255,255,255,.08)}
+.gtot{font-size:10px;color:rgba(255,255,255,.3);line-height:1.4}
+.grid{display:grid;gap:6px}.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}
+.eb{padding:12px 3px;border-radius:11px;font-size:12px;font-weight:800;text-align:center;line-height:1.2;border:1px solid transparent;transition:transform .08s}
+.eb:active{transform:scale(.94)}.eb.s{box-shadow:0 0 0 2px currentColor inset;filter:brightness(1.3)}
+.eb small{display:block;font-size:8px;opacity:.6;font-weight:600;margin-top:1px}
+.dt{margin:9px 0}
+.dt-t{font-size:10px;color:rgba(255,255,255,.36);margin-bottom:4px;font-weight:600}
+.dt-r{display:flex;gap:5px;flex-wrap:wrap}
+.dt-b{padding:9px 12px;border-radius:9px;font-size:12px;font-weight:700;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.62);text-align:left}
+.dt-b.s{border-color:#ff5252;color:#ff5252;background:rgba(255,82,82,.1)}
+.dt-b:active{transform:scale(.95)}
+.dt-f{width:100%;height:38px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:9px;color:#ccc;font-size:13px;padding:0 12px;outline:none}
+.flow{margin:9px 0;padding:9px 10px;border-radius:11px;background:rgba(100,181,246,.05);border:1px solid rgba(100,181,246,.14)}
+.flow-t{font-size:10px;color:#64b5f6;font-weight:700;margin-bottom:5px}
+.ab{position:sticky;bottom:8px;width:100%;padding:15px;border-radius:13px;font-size:15px;font-weight:900;margin-top:12px;box-shadow:0 6px 24px rgba(0,0,0,.55)}
+.ab.ok{background:linear-gradient(135deg,#e53935,#8e0000);color:#fff}
+.ab.no{background:rgba(255,255,255,.05);color:rgba(255,255,255,.28);box-shadow:none}
+.ab:active{transform:scale(.98)}
+
+.rec-t{font-size:10px;color:rgba(255,255,255,.28);padding:14px 4px 4px;font-weight:700}
+.tbl{width:100%;border-collapse:collapse;font-size:11px}
+.tbl th{background:rgba(229,57,53,.08);color:rgba(255,138,128,.85);padding:6px 8px;font-weight:700;text-align:center;position:sticky;top:0;z-index:2;border-bottom:1px solid rgba(229,57,53,.14)}
+.tbl td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:top}
+.tbl .gm{text-align:center;font-family:ui-monospace,monospace;font-weight:700;color:rgba(255,255,255,.5);white-space:nowrap}
+.tbl .ev{font-weight:700}.tbl .nt{color:rgba(255,255,255,.42);font-size:10px}
+.tbl .dc{text-align:center;width:26px}
+.td-d{width:22px;height:22px;border-radius:6px;background:rgba(255,100,100,.06);border:1px solid rgba(255,100,100,.15);color:#ff8a80;font-size:12px}
+.mt{text-align:center;color:rgba(255,255,255,.18);padding:34px;font-size:13px}
+
+.cnt{padding:8px 12px 22px}
+.cs{margin-bottom:9px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);overflow:hidden}
+.cs-h{padding:10px 12px;background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:space-between;user-select:none}
+.cs-h .t{font-size:13px;font-weight:800;color:rgba(255,138,128,.88)}
+.cs-h .ar{font-size:10px;color:rgba(255,255,255,.25)}
+.cs-b{padding:5px 10px 9px}
+.ci{padding:6px 2px;border-bottom:1px solid rgba(255,255,255,.03);display:flex;align-items:center;justify-content:space-between;gap:6px}
+.ci:last-child{border-bottom:none}
+.ci-l{flex:1;min-width:0}.ci-n{font-size:12px;font-weight:600;color:rgba(255,255,255,.78)}
+.ci-h{font-size:9px;color:#FFA726;background:rgba(255,167,38,.12);border-radius:4px;padding:1px 6px;display:inline-block;margin-top:2px;font-weight:800}
+.ci-h.hi{color:#AB47BC;background:rgba(171,71,188,.14)}
+.ci-s{font-size:9px;color:rgba(255,255,255,.3);margin-top:1px}
+.cw{display:flex;align-items:center;gap:5px}
+.cm,.cp{width:38px;height:38px;border-radius:10px;font-size:19px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.cm{background:rgba(255,100,100,.08);border:1px solid rgba(255,100,100,.15);color:#ff8a80}
+.cp{background:rgba(100,181,246,.08);border:1px solid rgba(100,181,246,.18);color:#90caf9}
+.cm:active,.cp:active{transform:scale(.85)}
+.vl{min-width:34px;height:38px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#eef2f6;font-family:ui-monospace,monospace}
+.cc{margin:6px 2px 2px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);font-size:11px}
+.cc-l{color:#ff8a80}.cc-s{color:rgba(255,255,255,.3);margin-top:2px;font-size:10px}
+.tgl{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:2px 0 10px;padding:9px 11px;border-radius:11px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06)}
+.tgl-t{font-size:11px;font-weight:700;color:rgba(255,255,255,.7)}
+.tgl-s{font-size:9px;color:rgba(255,255,255,.32);margin-top:2px;line-height:1.4}
+.sw{width:52px;height:30px;border-radius:15px;flex-shrink:0;background:rgba(255,255,255,.09);position:relative;transition:background .2s}
+.sw.on{background:rgba(229,57,53,.45)}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:12px;background:#ccc;transition:transform .2s}
+.sw.on::after{transform:translateX(22px);background:#ff8a80}
+
+.info{padding:10px 14px 24px}
+.isec{margin-bottom:11px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);overflow:hidden}
+.isec-h{padding:10px 12px;background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:space-between;user-select:none}
+.isec-h .t{font-size:13px;font-weight:800;color:rgba(255,138,128,.88)}
+.isec-h .ar{font-size:10px;color:rgba(255,255,255,.2)}
+.isec-b{padding:8px 12px 12px}
+.itbl{width:100%;border-collapse:collapse;font-size:11px}
+.itbl th{background:rgba(229,57,53,.07);color:rgba(255,138,128,.75);padding:5px 6px;font-weight:700;text-align:left}
+.itbl td{padding:5px 6px;border-top:1px solid rgba(255,255,255,.04);vertical-align:top;color:rgba(255,255,255,.62)}
+.itbl td.v{text-align:right;white-space:nowrap;font-family:ui-monospace,monospace;color:#80cbc4;font-weight:700}
+.ibadge{display:inline-block;font-size:10px;font-weight:800;padding:1px 7px;border-radius:5px;color:#08090c}
+.inote{font-size:10px;color:rgba(255,255,255,.32);margin-top:6px;line-height:1.5}
+.idot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle}
+
+.exp{padding:14px}
+.exp-h{font-size:12px;color:rgba(255,138,128,.75);font-weight:700;margin-bottom:6px}
+.exp-ta{width:100%;min-height:340px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:12px;color:#ffcdc8;font-size:11px;font-family:ui-monospace,monospace;white-space:pre-wrap;resize:none;outline:none;-webkit-user-select:all;user-select:all}
+</style>
+</head>
+<body>
+<div id="W">
+  <div id="top"><div id="hdr"></div><div class="est" id="est"></div><div class="qs" id="qs"></div></div>
+  <div id="ct"></div>
+  <div id="tabs"></div>
+</div>
+<script>
+/* ========================================================================
+   スマスロ ゴッドイーター リザレクション（山佐ネクスト / 2024.7.22）
+   設定判別＆実戦メモツール
+   数値出典: 一撃・なな徹・ちょんぼりすた等の解析値（メーカー一次情報ではない）
+   ======================================================================== */
+var SETS=[1,2,3,4,5,6];
+var SC={1:"#78909C",2:"#42A5F5",3:"#66BB6A",4:"#FFA726",5:"#EF5350",6:"#AB47BC"};
+var WARI={1:"97.9",2:"—",3:"—",4:"105.6",5:"—",6:"114.9"};
+var ATX={1:351.9,2:344.5,3:330.1,4:317.0,5:302.2,6:290.3};
+var CZX={1:392.0,2:378.3,3:359.1,4:343.4,5:324.3,6:310.6};
+/* 通常滞在時 強チェリーからのAT直撃当選率（変換強チェ含む） */
+var CHOKU={1:.004,2:.012,3:.024,4:.043,5:.051,6:.059};
+/* 通常滞在時 弱チェリー/スイカからのCZ当選率 */
+var WEAK={1:.002,2:.004,3:.006,4:.008,5:.010,6:.012};
+var WEAKR={1:0.2,2:0.4,3:0.6,4:0.8,5:1.0,6:1.2};
+/* 準確定示唆（実戦上の情報や「濃厚!?」表記）の重み。設定を切り捨てず強く傾けるだけ */
+var QPEN=0.08;
+/* 通常滞在時 チャンス目からのCZ当選率（参考表示のみ） */
+var CMR={1:15.8,2:17.2,3:19.1,4:21.1,5:23.4,6:24.9};
+/* 示唆演出の重み（公開解析に出現率がないため傾向からの推定値。トグルでOFF可） */
+var SOFT={
+ hiA:{1:1,2:1.1,3:1.3,4:1.6,5:1.9,6:2.2},
+ hiB:{1:1,2:1.2,3:1.6,4:2.2,5:2.8,6:3.4},
+ evenA:{1:1,2:2.0,3:1,4:2.0,5:1,6:2.0},
+ evenB:{1:1,2:3.0,3:1,4:3.0,5:1,6:3.0}};
+
+/* ===== イベント ===== */
+var EVS=[
+ {id:"at",l:"AT当選",s:"アラガミバースト",c:"#ff5252",cat:"at"},
+ {id:"cz",l:"CZ",s:"防衛戦/殲滅",c:"#42a5f5",cat:"cz"},
+ {id:"kyo",l:"強チェリー",s:"直撃抽選",c:"#ffa726",cat:"kyo"},
+ {id:"atend",l:"AT終了",s:"画面/ボイス",c:"#ce93d8",cat:"atend"},
+ {id:"joui",l:"上位/特化",c:"#80cbc4",cat:"joui"},
+ {id:"ensh",l:"演出/示唆",c:"#9fa8da",cat:"enshutsu"},
+ {id:"other",l:"その他",c:"#8899aa",cat:"other"}
+];
+var EVMAP={};EVS.forEach(function(e){EVMAP[e.id]=e});
+
+var AT_KIK=[{id:"g",l:"規定ゲーム数"},{id:"cz",l:"CZ経由"},{id:"choku",l:"レア役直撃"},
+ {id:"tenjou",l:"天井(1000G/600G)"},{id:"joui",l:"上位AT/引き戻し"},{id:"fumei",l:"不明"}];
+var CZ_TYPE=[{id:"bouei",l:"アラガミ防衛戦"},{id:"senmetsu",l:"殲滅モード",s:"上位CZ"}];
+var CZ_KIK=[{id:"weak",l:"弱チェリー",s:"設定差大"},{id:"suika",l:"スイカ",s:"設定差大"},
+ {id:"cm",l:"チャンス目"},{id:"g",l:"規定G数/その他"},{id:"fumei",l:"不明"}];
+var CZ_RES=[{id:"s",l:"成功(AT当選)"},{id:"f",l:"失敗"}];
+var KYO_RES=[{id:"hit",l:"AT直撃"},{id:"miss",l:"直撃せず"}];
+var JOUI_T=[{id:"shikkoku",l:"漆黒の捕喰者",s:"上位AT"},{id:"kamiwo",l:"神を喰らえ"},
+ {id:"kakusei",l:"神機覚醒",s:"上位報酬"},{id:"fang",l:"フェンリルファング"},
+ {id:"hannibal",l:"逆鱗ハンニバル討伐戦"},{id:"gate",l:"リザレクションゲート"},{id:"kamiochi",l:"神堕"}];
+
+/* AT終了画面（示唆） */
+var ENDSCR=[
+ {k:"eNone",l:"キャラなし",s:"基本パターン"},
+ {k:"eKota",l:"コウタ",s:"高設定示唆A",soft:"hiA"},
+ {k:"eArisa",l:"アリサ",s:"偶数示唆A",soft:"evenA"},
+ {k:"eSoma",l:"ソーマ",s:"高設定示唆B",soft:"hiB"},
+ {k:"eSakuya",l:"サクヤ",s:"偶数示唆B",soft:"evenB"},
+ {k:"eYu",l:"ユウ",h:"設2･3･4否定",m:[1,5,6]},
+ {k:"eRindo",l:"リンドウ",h:"設3以上濃厚",m:[3,4,5,6]},
+ {k:"eShio",l:"シオ",h:"設4以上濃厚",m:[4,5,6]},
+ {k:"eCafe",l:"カフェ",h:"偶数濃厚",m:[2,4,6]},
+ {k:"eMale",l:"男性キャラ集合",h:"設5以上濃厚",m:[5,6]},
+ {k:"eFemale",l:"女性キャラ集合(デフォルメ)",h:"設6濃厚",m:[6],hi:1}];
+/* ストーリーパート終了時ボイス（エンディング中のレア役タッチも同じ） */
+var VOICE=[
+ {k:"vKota",l:"コウタ「一緒にバガラリー見ようぜ！」",s:"デフォルト"},
+ {k:"vArisa",l:"アリサ「側面、後方ともにクリアです！」",s:"デフォルト"},
+ {k:"vHibari",l:"ヒバリ「私にもお役に立てることが〜」",s:"偶数示唆A",soft:"evenA"},
+ {k:"vSakuya",l:"サクヤ「私のやるべきことを〜」",s:"偶数示唆B",soft:"evenB"},
+ {k:"vSoma",l:"ソーマ「思い出ってのは〜」",s:"高設定示唆A",soft:"hiA"},
+ {k:"vRen",l:"レン「貴方はそのアラガミを殺せますか？」",s:"高設定示唆B",soft:"hiB"},
+ {k:"vYu",l:"ユウ「信じられる仲間がいるから〜」",h:"設2･3否定",m:[1,4,5,6]},
+ {k:"vErina",l:"エリナ「大きくなったら〜」",h:"設2･4･6濃厚",m:[2,4,6]},
+ {k:"vRindo",l:"リンドウ「お前の背中は預かってやる」",h:"設2以上濃厚",m:[2,3,4,5,6]},
+ {k:"vShio",l:"シオ「いただきま～す！」",h:"設5以上濃厚",m:[5,6],hi:1}];
+/* 枚数・連打・タイマー・トロフィー */
+var CONF=[
+ {k:"m246",l:"獲得枚数 246枚",h:"偶数濃厚",m:[2,4,6]},
+ {k:"m456",l:"獲得枚数 456枚",h:"設4以上濃厚",m:[4,5,6]},
+ {k:"m555",l:"獲得枚数 555枚",h:"設5以上濃厚",m:[5,6]},
+ {k:"m666",l:"獲得枚数 666枚",h:"設6濃厚",m:[6],hi:1},
+ {k:"r44",l:"連打上乗せ +44枚",h:"設4以上濃厚",m:[4,5,6]},
+ {k:"r55",l:"連打上乗せ +55枚",h:"設5以上濃厚",m:[5,6]},
+ {k:"r66",l:"連打上乗せ +66枚",h:"設6濃厚",m:[6],hi:1},
+ {k:"timer6",l:"ユウタイマー6スタート→AT非当選",h:"設6濃厚!?（準確定）",q:6,hi:1}];
+var TROPHY=[
+ {k:"tCu",l:"銅トロフィー",h:"設2以上（準確定）",q:2},
+ {k:"tAg",l:"銀トロフィー",h:"設3以上（準確定）",q:3},
+ {k:"tAu",l:"金トロフィー",h:"設4以上（準確定）",q:4},
+ {k:"tRb",l:"虹トロフィー",h:"設6（準確定）",q:6,hi:1}];
+/* 全ハード/ソフト示唆をまとめて参照 */
+var SIG=ENDSCR.concat(VOICE,CONF,TROPHY);
+
+/* 演出/示唆メモ（設定示唆ではない＝推測に非加算） */
+var ENSHUTSU=[
+ {id:"stage",l:"ステージ/状態",opts:[
+   {id:"tsujo",l:"通常ステージ",s:"内部状態 通常"},
+   {id:"kaku",l:"高確示唆ステージ",s:"CZ当選率UP"},
+   {id:"sakusen",l:"作戦区域",s:"AT/CZ前兆"},
+   {id:"vacance",l:"バカンスモード",s:"特殊高確。AT後なら100GゾーンでのAT当選濃厚"}]},
+ {id:"serifu",l:"セリフ演出(規定G数示唆)",opts:[
+   {id:"rindo",l:"リンドウのセリフ",s:"規定G数示唆"},
+   {id:"ren",l:"レンのセリフ",s:"規定G数示唆"},
+   {id:"aka",l:"赤セリフ",s:"AT後99G以内なら100G濃厚"}]},
+ {id:"eye",l:"アイキャッチ",opts:[
+   {id:"rindo",l:"リンドウのアイキャッチ",s:"浅いG数なら早い当たり期待"},
+   {id:"other",l:"その他キャラ",s:"規定G数示唆"}]},
+ {id:"timer",l:"ユウタイマー演出",opts:[
+   {id:"out",l:"タイマー出現",s:"本前兆期待大"},
+   {id:"t6",l:"6スタート→AT非当選",s:"設6濃厚（示唆タブでもカウント）"}]},
+ {id:"terminal",l:"ターミナル演出",opts:[
+   {id:"chara",l:"キャラによる規定G数示唆"}]}
+];
+
+/* ===== 示唆カウンター ===== */
+var CNTS=[
+ {id:"rare",t:"🍒 レア役からの当選（設定差大）",items:[
+   {k:"kyoT",l:"強チェリー回数(変換含む)",s:"通常時のみカウント"},
+   {k:"kyoH",l:"↑うちAT直撃",s:"設1:0.4% → 設6:5.9%（約15倍差）"},
+   {k:"wT",l:"弱チェリー/スイカ 回数",s:"通常ステージ滞在中のみ。入れると下段が正しい確率計算になります"},
+   {k:"wCZ",l:"↑うちCZ当選",s:"設1:0.2% → 設6:1.2%（約6倍差）"},
+   {k:"cmCZ",l:"チャンス目からのCZ当選",s:"設1:15.8% → 設6:24.9%（参考表示のみ）"}]},
+ {id:"end",t:"🖼️ AT終了画面",items:ENDSCR},
+ {id:"voice",t:"🔊 ストーリー終了ボイス",items:VOICE},
+ {id:"conf",t:"🏆 枚数・連打・タイマー 確定示唆",items:CONF},
+ {id:"trophy",t:"🐸 ケロットトロフィー（実戦上）",items:TROPHY}
+];
+var ALLCK=[];CNTS.forEach(function(s){s.items.forEach(function(i){ALLCK.push(i.k)})});
+var CNT_ORDER=["rare","end","voice","conf","trophy"];
+var CNTMAP={};CNTS.forEach(function(s){CNTMAP[s.id]=s});
+
+/* ===== 状態 ===== */
+var LOG=[],CC={},COL={},TAB="rec",HAMARI="",USE_SOFT=true;
+var curEv=null,curG="",curKik=null,curType=null,curRes=null,curScr=null,curVoice=null,curConf=null,curMai="",curNote="",curCat=null,curOpt=null;
+var rstP=false,rstT=null,SK="ge_r_v1";
+
+function initC(){ALLCK.forEach(function(k){CC[k]=0});CNTS.forEach(function(s){COL[s.id]=(s.id==="trophy")})}
+function load(){initC();
+ try{var d=JSON.parse(localStorage.getItem(SK+"c"));if(d)for(var k in d)if(k in CC)CC[k]=d[k]}catch(e){}
+ try{LOG=JSON.parse(localStorage.getItem(SK+"l"))||[]}catch(e){LOG=[]}
+ try{HAMARI=localStorage.getItem(SK+"h")||""}catch(e){HAMARI=""}
+ try{var u=localStorage.getItem(SK+"u");USE_SOFT=(u===null?true:u==="1")}catch(e){USE_SOFT=true}}
+function save(){try{localStorage.setItem(SK+"c",JSON.stringify(CC));localStorage.setItem(SK+"l",JSON.stringify(LOG));
+ localStorage.setItem(SK+"h",HAMARI);localStorage.setItem(SK+"u",USE_SOFT?"1":"0")}catch(e){}}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")}
+function rate(n,d){return d?(n/d*100).toFixed(1):"0"}
+
+/* 通常時総G = 各AT当選時に入力したハマりG の合計 ＋ 現在のハマりG */
+function totalG(){var t=0;for(var i=0;i<LOG.length;i++)if(LOG[i].ev==="at")t+=parseInt(LOG[i].g)||0;
+ return t+(parseInt(HAMARI)||0)}
+function stats(){var s={at:0,cz:0,czS:0,senmetsu:0,joui:0,mai:0};
+ for(var i=0;i<LOG.length;i++){var e=LOG[i];
+  if(e.ev==="at")s.at++;
+  if(e.ev==="cz"){s.cz++;if(e.res==="s")s.czS++;if(e.type==="senmetsu")s.senmetsu++}
+  if(e.ev==="joui")s.joui++;
+  if(e.mai)s.mai+=parseInt(e.mai)||0}
+ return s}
+
+/* ============================================================ ベイズ推定 ============================================================ */
+function estimate(){
+ var ll={},i,s,reasons=[],conf=[],used=false,mask={};
+ for(i=0;i<SETS.length;i++){ll[SETS[i]]=0;mask[SETS[i]]=true}
+ function bino(succ,trials,rates,label){if(!trials)return;used=true;
+  for(i=0;i<SETS.length;i++){s=SETS[i];var p=Math.min(.999,Math.max(.0005,rates[s]));ll[s]+=succ*Math.log(p)+(trials-succ)*Math.log(1-p);}
+  reasons.push(label+" "+succ+"/"+trials);}
+ var tG=totalG(),st=stats();
+ // AT初当たり
+ if(tG>=1000&&st.at>0){used=true;
+  for(i=0;i<SETS.length;i++){s=SETS[i];var p=1/ATX[s];ll[s]+=st.at*Math.log(p)+(tG-st.at)*Math.log(1-p);}
+  reasons.push("AT初当たり 1/"+Math.round(tG/st.at));}
+ // CZ：AT当選分と重複しない「AT非当選に終わったCZ」のみを独立証拠として使う
+ var czFail=st.cz-st.czS;
+ if(tG>=1000&&czFail>0){used=true;
+  var fr=Math.min(.95,Math.max(.05,czFail/st.cz));
+  for(i=0;i<SETS.length;i++){s=SETS[i];var q=fr/CZX[s];ll[s]+=czFail*Math.log(q)+(tG-czFail)*Math.log(1-q);}
+  reasons.push("CZ失敗 "+czFail+"/"+st.cz+"（AT分と非重複）");}
+ // 強チェリー直撃（分母あり＝正規の二項）
+ if(CC.kyoT>0)bino(Math.min(CC.kyoH,CC.kyoT),CC.kyoT,CHOKU,"強チェ直撃");
+ // 弱チェ/スイカ→CZ：分母があれば正規の二項、無ければ減衰させた出現比
+ if(CC.wT>0)bino(Math.min(CC.wCZ,CC.wT),CC.wT,WEAK,"弱チェ/スイカ→CZ");
+ else if(CC.wCZ>0){used=true;
+  for(i=0;i<SETS.length;i++){s=SETS[i];ll[s]+=0.5*CC.wCZ*Math.log(WEAKR[s]);}
+  reasons.push("弱チェ/スイカ→CZ "+CC.wCZ+"回（分母なし・減衰）");}
+ // 示唆演出（ハード制約 / 準確定の重み / 推定重み）
+ SIG.forEach(function(it){var n=CC[it.k];if(!n)return;
+  if(it.m){var mm={};it.m.forEach(function(x){mm[x]=1});
+   for(i=0;i<SETS.length;i++)if(!mm[SETS[i]])mask[SETS[i]]=false;
+   conf.push(it.l+"→"+it.h);used=true;}
+  else if(it.q){used=true;
+   for(i=0;i<SETS.length;i++){s=SETS[i];if(s<it.q)ll[s]+=n*Math.log(QPEN);}
+   conf.push(it.l+"→"+it.h);}
+  else if(it.soft&&USE_SOFT){used=true;
+   for(i=0;i<SETS.length;i++){s=SETS[i];ll[s]+=n*Math.log(SOFT[it.soft][s]);}}});
+ // 入力の整合性チェック
+ var warn=[];
+ if(CC.kyoH>CC.kyoT)warn.push("強チェ直撃 "+CC.kyoH+"回 > 強チェ "+CC.kyoT+"回");
+ if(CC.wT>0&&CC.wCZ>CC.wT)warn.push("弱チェ/スイカCZ "+CC.wCZ+"回 > 母数 "+CC.wT+"回");
+ var noG=0;for(i=0;i<LOG.length;i++)if(LOG[i].ev==="at"&&!(parseInt(LOG[i].g)>0))noG++;
+ if(noG)warn.push("G数未入力のAT記録 "+noG+"件（初当たりが過大評価されます）");
+ var softN=0;SIG.forEach(function(it){if(it.soft)softN+=CC[it.k]});
+ if(softN&&USE_SOFT)reasons.push("示唆演出 "+softN+"回");
+ // softmax + マスク
+ var any=false;for(i=0;i<SETS.length;i++)if(mask[SETS[i]])any=true;
+ if(!any)for(i=0;i<SETS.length;i++)mask[SETS[i]]=true; // 矛盾時は制約を解除
+ var mx=-Infinity;for(i=0;i<SETS.length;i++)if(mask[SETS[i]]&&ll[SETS[i]]>mx)mx=ll[SETS[i]];
+ var ex={},z=0;for(i=0;i<SETS.length;i++){s=SETS[i];var v=mask[s]?Math.exp(ll[s]-mx):0;ex[s]=v;z+=v;}
+ var post={};for(i=0;i<SETS.length;i++){s=SETS[i];post[s]=z?ex[s]/z:0}
+ var best=SETS[0],bp=-1,esum=0,odd=0,even=0,hi=0;
+ for(i=0;i<SETS.length;i++){s=SETS[i];if(post[s]>bp){bp=post[s];best=s}esum+=s*post[s];
+  if(s%2)odd+=post[s];else even+=post[s];if(s>=4)hi+=post[s];}
+ return {post:post,best:best,bestP:bp,exp:esum,odd:odd,even:even,hi:hi,used:used,reasons:reasons,conf:conf,mask:mask,any:any,warn:warn};}
+
+/* ============================================================ RENDER ============================================================ */
+function render(){rHdr();rEst();rQS();rTabs();
+ if(TAB==="rec")rRec();else if(TAB==="cnt")rCnt();else if(TAB==="tl")rTL();else if(TAB==="info")rInfo();else rExp()}
+
+function rHdr(){var h='<div class="hr"><div><div class="ht">ゴッドイーター リザレクション</div><div class="hs">設定判別＆実戦メモ ・ '+LOG.length+'件</div></div>';
+ h+='<button type="button" class="hb'+(rstP?' p':'')+'" id="bR">'+(rstP?'もう一度でリセット':'リセット')+'</button></div>';
+ document.getElementById("hdr").innerHTML=h;
+ var b=document.getElementById("bR");if(b)b.addEventListener("click",function(e){e.preventDefault();doRst()})}
+
+function rEst(){var E=estimate(),h='';
+ h+='<div class="est-top"><span class="est-lb">推定</span>';
+ if(E.used){h+='<span class="est-main" style="color:'+SC[E.best]+'">設定'+E.best+'</span><span class="est-conf">確率'+(E.bestP*100).toFixed(0)+'% / 期待値'+E.exp.toFixed(1)+'</span>';}
+ else h+='<span class="est-main" style="color:rgba(255,255,255,.3)">データ待ち</span>';
+ h+='</div><div class="bars">';
+ for(var i=0;i<SETS.length;i++){var s=SETS[i],p=E.post[s]||0;
+  h+='<div class="bar-row"><div class="bar-s" style="color:'+SC[s]+';background:'+SC[s]+'22">'+s+'</div>';
+  h+='<div class="bar-track"><div class="bar-fill" style="width:'+(p*100).toFixed(1)+'%;background:'+SC[s]+'"></div></div>';
+  h+='<div class="bar-pct" style="color:'+(E.used&&p>=E.bestP?SC[s]:'rgba(255,255,255,.5)')+'">'+(p*100).toFixed(0)+'%</div></div>';}
+ h+='</div>';
+ if(E.used){
+  h+='<div class="oe"><div class="oe-c">奇数(1/3/5)<b style="color:#64b5f6">'+(E.odd*100).toFixed(0)+'%</b></div>';
+  h+='<div class="oe-c">偶数(2/4/6)<b style="color:#ff8a80">'+(E.even*100).toFixed(0)+'%</b></div>';
+  h+='<div class="oe-c">設4以上<b style="color:#ffd54f">'+(E.hi*100).toFixed(0)+'%</b></div></div>';}
+ if(E.conf.length){var rem=[];SETS.forEach(function(s2){if(E.mask[s2])rem.push(s2)});
+  h+='<div class="rng" style="background:rgba(255,82,82,.12);color:#ff8a80;border:1px solid rgba(255,82,82,.35)">🎯 残る設定: '+rem.join('・')+'　（'+E.conf.join(' / ')+'）</div>';}
+ if(!E.any)h+='<div class="rng" style="background:rgba(255,167,38,.12);color:#ffa726;border:1px solid rgba(255,167,38,.35)">⚠ 示唆が矛盾しています（誤記録の可能性）。制約を一時解除中</div>';
+ if(E.warn.length)h+='<div class="rng" style="background:rgba(255,167,38,.12);color:#ffa726;border:1px solid rgba(255,167,38,.35);text-align:left;line-height:1.5">⚠ '+E.warn.join('<br>⚠ ')+'</div>';
+ if(E.reasons.length)h+='<div class="est-note"><b>根拠:</b> '+E.reasons.join(' / ')+'</div>';
+ document.getElementById("est").innerHTML=h}
+
+function rQS(){var s=stats(),tG=totalG(),h='';
+ h+='<div class="qc"><span class="ql">通常総G</span><span class="qv">'+tG+'</span></div>';
+ if(tG>0&&s.at>0)h+='<div class="qc"><span class="ql">AT初当</span><span class="qv">1/'+Math.round(tG/s.at)+'</span></div>';
+ if(tG>0&&s.cz>0)h+='<div class="qc"><span class="ql">CZ</span><span class="qv">1/'+Math.round(tG/s.cz)+' ('+s.cz+'回)</span></div>';
+ if(s.cz>0)h+='<div class="qc"><span class="ql">CZ成功</span><span class="qv">'+s.czS+'/'+s.cz+'</span></div>';
+ if(CC.kyoT>0)h+='<div class="qc"><span class="ql">強チェ直撃</span><span class="qv">'+CC.kyoH+'/'+CC.kyoT+'</span></div>';
+ if(CC.wCZ>0)h+='<div class="qc"><span class="ql">弱チェ/スイカ→CZ</span><span class="qv">'+CC.wCZ+'回</span></div>';
+ if(s.mai>0)h+='<div class="qc"><span class="ql">獲得</span><span class="qv">'+s.mai+'枚</span></div>';
+ document.getElementById("qs").innerHTML=h}
+
+function rTabs(){var ts=[{id:"rec",ic:"✏️",l:"記録"},{id:"cnt",ic:"🎯",l:"示唆"},{id:"tl",ic:"📋",l:"履歴"},{id:"info",ic:"📖",l:"解説"},{id:"exp",ic:"📤",l:"出力"}];
+ var h="";for(var i=0;i<ts.length;i++)h+='<div class="tb'+(TAB===ts[i].id?' a':'')+'" data-tab="'+ts[i].id+'"><span class="tb-ic">'+ts[i].ic+'</span>'+ts[i].l+'</div>';
+ document.getElementById("tabs").innerHTML=h}
+
+function detRow(t,arr,key,cur){var h='<div class="dt"><div class="dt-t">'+t+'</div><div class="dt-r">';
+ for(var i=0;i<arr.length;i++){var r=arr[i];h+='<button type="button" class="dt-b'+(cur===r.id?' s':'')+'" data-'+key+'="'+r.id+'">'+r.l+(r.s?'<small style="display:block;font-size:8px;opacity:.55">'+r.s+'</small>':'')+'</button>';}
+ return h+'</div></div>'}
+function sigRow(t,arr,key,cur,noneLabel){var h='<div class="dt"><div class="dt-t">'+t+'</div><div class="dt-r">';
+ h+='<button type="button" class="dt-b'+(cur==="none"?' s':'')+'" data-'+key+'="none">'+(noneLabel||"なし/未確認")+'</button>';
+ for(var i=0;i<arr.length;i++){var r=arr[i];
+  h+='<button type="button" class="dt-b'+(cur===r.k?' s':'')+'" data-'+key+'="'+r.k+'">'+r.l+((r.h||r.s)?'<small style="display:block;font-size:8px;opacity:.55">'+(r.h||r.s)+'</small>':'')+'</button>';}
+ return h+'</div></div>'}
+
+function rRec(){var ct=document.getElementById("ct"),h='<div class="rec">';
+ h+='<div class="rowg"><label>現在のハマりG</label><input type="number" inputmode="numeric" id="iH" value="'+esc(HAMARI)+'" placeholder="0" class="gin">';
+ h+='<span class="gtot">通常総G <b style="color:#ff8a80">'+totalG()+'</b><br>天井 1000G＋α（短縮600G）</span></div>';
+ h+='<div class="grid g3">';
+ EVS.forEach(function(e){var sel=(curEv===e.id);
+  h+='<button type="button" class="eb'+(sel?' s':'')+'" data-ev="'+e.id+'" style="background:'+e.c+'1e;color:'+e.c+';border-color:'+e.c+'30">'+e.l+(e.s?'<small>'+e.s+'</small>':'')+'</button>';});
+ h+='</div>';
+ if(curEv){var ev=EVMAP[curEv];
+  if(ev.cat==="at"){
+   h+='<div class="flow"><div class="flow-t">① 当選契機</div><div class="dt-r">';
+   AT_KIK.forEach(function(k){h+='<button type="button" class="dt-b'+(curKik===k.id?' s':'')+'" data-kik="'+k.id+'">'+k.l+'</button>'});
+   h+='</div><div class="flow-t" style="margin-top:8px">② 当選時のハマりG（通常総Gに加算）</div>';
+   h+='<input type="number" inputmode="numeric" class="dt-f" id="iG" value="'+esc(curG)+'" placeholder="通常時ゲーム数">';
+   h+='<div style="font-size:9px;color:rgba(255,255,255,.32);margin-top:6px">規定G数は100/200/300/450/600/750/1000G+α。高設定ほど200G・450Gでの当選率が高い可能性あり。</div></div>';}
+  if(ev.cat==="cz"){h+=detRow("CZ種別",CZ_TYPE,"type",curType)+detRow("突入契機",CZ_KIK,"kik",curKik)+detRow("結果",CZ_RES,"res",curRes);
+   h+='<div style="font-size:9px;color:rgba(255,255,255,.34);margin-top:-4px;line-height:1.5">内部状態「通常」滞在時の<b style="color:#ff8a80">弱チェリー/スイカからのCZ当選は約6倍の設定差</b>（設1:0.2%→設6:1.2%）。高確以上では設定差がないため、通常ステージでの当選ほど価値が高いです。</div>';}
+  if(ev.cat==="kyo"){h+=detRow("結果",KYO_RES,"res",curRes);
+   h+='<div style="font-size:9px;color:rgba(255,255,255,.34);margin-top:-4px;line-height:1.5">通常時の強チェリー（チェリー変換での出現も含む）を1回ずつ記録。AT直撃は設1:0.4%→設6:5.9%と約15倍差で、本機で最も強い判別要素です。</div>';}
+  if(ev.cat==="atend"){
+   h+=sigRow("AT終了画面",ENDSCR,"scr",curScr);
+   h+=sigRow("ストーリー終了ボイス（サブ液晶タッチ）",VOICE,"voice",curVoice);
+   h+=sigRow("枚数/連打/タイマー 示唆",CONF,"conf",curConf);
+   h+='<div class="dt"><div class="dt-t">獲得枚数（記録用）</div><input type="number" inputmode="numeric" class="dt-f" id="iMai" value="'+esc(curMai)+'" placeholder="枚数"></div>';}
+  if(ev.cat==="joui")h+=detRow("種別",JOUI_T,"type",curType);
+  if(ev.cat==="enshutsu"){
+   h+='<div class="flow"><div class="flow-t">① 種類</div><div class="dt-r">';
+   ENSHUTSU.forEach(function(g){h+='<button type="button" class="dt-b'+(curCat===g.id?' s':'')+'" data-encat="'+g.id+'">'+g.l+'</button>'});
+   h+='</div>';
+   if(curCat){var grp=ENSHUTSU.filter(function(x){return x.id===curCat})[0];
+    h+='<div class="flow-t" style="margin-top:8px">② 内容（示唆を表示）</div><div class="dt-r">';
+    grp.opts.forEach(function(o){h+='<button type="button" class="dt-b'+(curOpt===o.id?' s':'')+'" data-enopt="'+o.id+'">'+o.l+(o.s?'<small style="display:block;font-size:8px;opacity:.55">'+o.s+'</small>':'')+'</button>'});
+    h+='</div>';}
+   h+='<div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:6px">規定G数・内部状態の示唆です（設定示唆ではないため推測には加算しません）。やめどきの判断メモとしてどうぞ。</div></div>';}
+  h+='<div class="dt"><input type="text" class="dt-f" id="iN" placeholder="メモ（任意）" value="'+esc(curNote)+'"></div>';}
+ var ok=canAdd();
+ h+='<button type="button" class="ab '+(ok?'ok':'no')+'" data-a="add">'+(ok?'✓ 記録する':(curEv?'↑ 内容を選択':'↑ イベントを選択'))+'</button>';
+ if(LOG.length>0){h+='<div class="rec-t">直近の記録</div>'+buildTable(Math.max(0,LOG.length-6),LOG.length,true);}
+ h+='</div>';ct.innerHTML=h}
+
+function canAdd(){if(!curEv)return false;var ev=EVMAP[curEv];
+ if(ev.cat==="at")return!!curKik;
+ if(ev.cat==="cz")return!!(curType&&curKik&&curRes);
+ if(ev.cat==="kyo")return!!curRes;
+ if(ev.cat==="atend")return!!(curScr||curVoice||curConf||curMai);
+ if(ev.cat==="joui")return!!curType;
+ if(ev.cat==="enshutsu")return!!(curCat&&curOpt);
+ return true}
+
+function sigLabel(k){for(var i=0;i<SIG.length;i++)if(SIG[i].k===k)return SIG[i].l+(SIG[i].h?"("+SIG[i].h+")":(SIG[i].s?"("+SIG[i].s+")":""));return k}
+function buildNote(e){var b=[],f;
+ if(e.kik){f=AT_KIK.concat(CZ_KIK).filter(function(x){return x.id===e.kik})[0];if(f)b.push(f.l)}
+ if(e.type){f=CZ_TYPE.concat(JOUI_T).filter(function(x){return x.id===e.type})[0];if(f)b.push(f.l)}
+ if(e.res){f=CZ_RES.concat(KYO_RES).filter(function(x){return x.id===e.res})[0];if(f)b.push(f.l)}
+ if(e.scr&&e.scr!=="none")b.push("画面:"+sigLabel(e.scr));
+ if(e.voice&&e.voice!=="none")b.push("ボイス:"+sigLabel(e.voice));
+ if(e.conf&&e.conf!=="none")b.push("★"+sigLabel(e.conf));
+ if(e.encat){var g=ENSHUTSU.filter(function(x){return x.id===e.encat})[0];
+  if(g){var o=g.opts.filter(function(x){return x.id===e.enopt})[0];b.push(g.l+"："+(o?o.l:e.enopt)+(o&&o.s?"("+o.s+")":""))}}
+ if(e.mai)b.push(e.mai+"枚");
+ if(e.note)b.push(esc(e.note));
+ return b.join("　")}
+
+function buildTable(from,to,del){var h='<table class="tbl"><thead><tr><th style="width:52px">G数</th><th>イベント</th><th>内容</th>'+(del?'<th style="width:26px"></th>':'')+'</tr></thead><tbody>';
+ for(var i=to-1;i>=from;i--){var e=LOG[i],ev=EVMAP[e.ev];
+  var gF=(e.ev==="at"&&e.g)?e.g+"G":"–";
+  var lbl=ev?ev.l:esc(e.ev),col=ev?ev.c:"rgba(255,255,255,.55)";
+  h+='<tr><td class="gm">'+gF+'</td><td class="ev" style="color:'+col+'">'+lbl+'</td><td class="nt">'+buildNote(e)+'</td>';
+  if(del)h+='<td class="dc"><button type="button" class="td-d" data-del="'+i+'">×</button></td>';
+  h+='</tr>';}
+ return h+'</tbody></table>'}
+
+function rTL(){var ct=document.getElementById("ct");
+ if(!LOG.length){ct.innerHTML='<div class="mt">まだ記録がありません</div>';return}
+ ct.innerHTML='<div style="padding:4px 4px 22px">'+buildTable(0,LOG.length,true)+'</div>'}
+
+function rCnt(){var ct=document.getElementById("ct"),h='<div class="cnt">';
+ h+='<div class="tgl" data-tgl="1"><div><div class="tgl-t">示唆演出の推定重みを使う</div><div class="tgl-s">「高設定示唆A/B・偶数示唆A/B」は出現率が非公開のため、傾向から置いた推定重みで計算しています。確定示唆（○以上濃厚）はOFFでも常に反映されます。</div></div><div class="sw'+(USE_SOFT?' on':'')+'"></div></div>';
+ for(var si=0;si<CNT_ORDER.length;si++){var sec=CNTMAP[CNT_ORDER[si]];if(!sec)continue;var cl=COL[sec.id];
+  h+='<div class="cs"><div class="cs-h" data-tog="'+sec.id+'"><div class="t">'+sec.t+'</div><span class="ar">'+(cl?'▶':'▼')+'</span></div>';
+  if(!cl){h+='<div class="cs-b">';
+   for(var ii=0;ii<sec.items.length;ii++){var it=sec.items[ii];
+    h+='<div class="ci"><div class="ci-l"><div class="ci-n">'+it.l+'</div>';
+    if(it.h)h+='<div class="ci-h'+(it.hi?' hi':'')+'">'+it.h+'</div>';if(it.s)h+='<div class="ci-s">'+it.s+'</div>';
+    h+='</div><div class="cw"><button type="button" class="cm" data-cd="'+it.k+'">−</button><div class="vl">'+CC[it.k]+'</div><button type="button" class="cp" data-ci="'+it.k+'">＋</button></div></div>';}
+   if(sec.id==="rare"){
+    if(CC.kyoT>0)h+='<div class="cc"><div class="cc-l">強チェ直撃率: '+CC.kyoH+'/'+CC.kyoT+' ('+rate(CC.kyoH,CC.kyoT)+'%)</div><div class="cc-s">設1:0.4 / 設2:1.2 / 設3:2.4 / 設4:4.3 / 設5:5.1 / 設6:5.9%。強チェは約1/400なので母数は貯まりにくいですが、1回でも直撃すれば高設定期待度が大幅UPします。</div></div>';
+    if(CC.wT>0||CC.wCZ>0)h+='<div class="cc"><div class="cc-l">弱チェ/スイカ→CZ: '+CC.wCZ+'/'+(CC.wT||'?')+(CC.wT?' ('+rate(CC.wCZ,CC.wT)+'%)':'')+'</div><div class="cc-s">'+(CC.wT?'設1:0.2%→設6:1.2%。通常ステージ滞在中の弱チェ/スイカを全て「回数」に入れるほど精度が上がります。':'⚠ 母数（弱チェ/スイカ回数）が未入力のため、当選回数のみを減衰させて計算しています。上振れ方向にしか動かない点に注意。')+'</div></div>';
+    if(CC.cmCZ>0)h+='<div class="cc"><div class="cc-l">チャンス目→CZ: '+CC.cmCZ+'回（参考）</div><div class="cc-s">設1:15.8%→設6:24.9%。分母（通常滞在時のチャンス目回数）が正確に取れないため推測には加算していません。</div></div>';}
+   h+='</div>';}
+  h+='</div>';}
+ h+='<div style="font-size:10px;color:rgba(255,255,255,.3);padding:8px 4px;line-height:1.6">※「記録」タブでAT終了画面・ボイス・示唆パターンを選ぶと、ここへ自動で加算されます。ケロットトロフィーは実戦上の確認情報で、示唆内容は他機種準拠の推測です。</div>';
+ h+='</div>';ct.innerHTML=h}
+
+/* ===== 解説 ===== */
+var INFO=[
+ {id:"i_base",t:"📊 設定別 基本数値",custom:"base",note:"純増約9.0枚/G、コイン持ち約31G/50枚。機械割は97.9〜114.9%で、公開されているのは設定1・4・6のみ。小役確率は全設定共通で、通常時とSTにはほとんど設定差が設けられていません。"},
+ {id:"i_rare",t:"🍒 レア役の設定差（最重要）",rows:[
+   ["強チェリー→AT直撃 設1〜6","0.4 / 1.2 / 2.4 / 4.3 / 5.1 / 5.9%",4],
+   ["弱チェリー・スイカ→CZ 設1〜6","0.2 / 0.4 / 0.6 / 0.8 / 1.0 / 1.2%"],
+   ["チャンス目→CZ 設1〜6","15.8 / 17.2 / 19.1 / 21.1 / 23.4 / 24.9%"],
+   ["強チェリー→CZ","55.2%（全設定共通）"]],
+  note:"いずれも内部状態「通常」滞在時の数値。高確以上では設定差がありません。ステージと内部状態は完全には紐づかないため、通常ステージでの弱チェ/スイカ当選を確認できたときの価値が特に高くなります。変換強チェリーも同じ抽選対象。"},
+ {id:"i_hit",t:"🎰 AT・CZ 出現率",custom:"hit",
+  note:"AT初当たりは1/351.9〜1/290.3、CZ合算は1/392.0〜1/310.6。どちらも設定差は緩やかなので、単独では判別しづらく、数千G単位のサンプルが必要です。高設定ほど規定ゲーム数200G・450Gでの当選率が高い可能性が指摘されています。"},
+ {id:"i_end",t:"🖼️ AT終了画面",rows:[
+   ["キャラなし","基本パターン"],["コウタ","高設定示唆A"],["アリサ","偶数示唆A"],
+   ["ソーマ","高設定示唆B"],["サクヤ","偶数示唆B"],
+   ["ユウ","設定2･3･4否定"],["リンドウ","設定3以上濃厚",3],["シオ","設定4以上濃厚",4],
+   ["カフェ","偶数設定濃厚",2],["男性キャラ集合","設定5以上濃厚",5],["女性キャラ集合(デフォルメ)","設定6濃厚",6]],
+  note:"AよりもBの方が強い示唆。設定6の実戦値ではキャラなし41.2%・アリサ23.5%・サクヤ17.6%・ソーマ11.8%・コウタ5.9%という出現分布でした。"},
+ {id:"i_voice",t:"🔊 ストーリー終了ボイス",rows:[
+   ["コウタ / アリサ","デフォルト"],["ヒバリ","偶数示唆A"],["サクヤ","偶数示唆B"],
+   ["ソーマ","高設定示唆A"],["レン","高設定示唆B"],
+   ["ユウ","設定2･3否定"],["エリナ","設定2･4･6濃厚",2],
+   ["リンドウ","設定2以上濃厚",2],["シオ","設定5以上濃厚",5]],
+  note:"ストーリーパート終了画面でサブ液晶をタッチすると発生。エンディング中のレア役成立時にサブ液晶をタッチしても同じ示唆ボイスが出るので、必ずタッチを。"},
+ {id:"i_conf",t:"🏆 枚数・連打・タイマーの確定示唆",rows:[
+   ["獲得枚数表示 246枚","偶数設定濃厚",2],["456枚","設定4以上濃厚",4],["555枚","設定5以上濃厚",5],["666枚","設定6濃厚",6],
+   ["連打上乗せ +44枚","設定4以上濃厚",4],["+55枚","設定5以上濃厚",5],["+66枚","設定6濃厚",6],
+   ["ユウタイマー6スタート→AT非当選","設定6濃厚!?",6]],
+  note:"連打上乗せは「神を喰らえ」のミズチ、「神機覚醒」のサクヤ時が対象。獲得枚数表示はストーリーパート中の表示。ユウタイマーは作戦区域中に発生します。"},
+ {id:"i_tenjou",t:"🎯 天井・リセット・やめどき",rows:[
+   ["ゲーム数天井","通常時最大1000G＋α"],
+   ["規定G数","100/200/300/450/600/750/1000G＋α"],
+   ["設定変更(リセット)","600G＋αに短縮"],
+   ["漆黒の捕喰者(上位AT)後","600G＋αに短縮"],
+   ["AT駆け抜け時","実戦上600G＋αに短縮の模様"],
+   ["逆鱗ハンニバル敗北後","100Gゾーンで当選濃厚"],
+   ["やめどき","AT後は即ヤメ可。ただし100Gゾーン(実戦上130G付近)は要確認"]],
+  note:"AT終了後にバカンスモードスタートなら100GゾーンでのAT当選濃厚。天井短縮が見込める状況（リセット・上位AT後・駆け抜け後）では浅いG数から狙えます。"},
+ {id:"i_nerai",t:"💰 天井狙い目（概算）",rows:[
+   ["通常時 プラス域","等価 約350G〜 / 5.6枚 約500G〜"],
+   ["通常時 現実的","等価 約500G〜 / 5.6枚 約600G〜"],
+   ["短縮時 プラス域","等価 約100G〜 / 5.6枚 約200G〜"],
+   ["短縮時 現実的","等価 約200G〜 / 5.6枚 約300G〜"]],
+  note:"コイン持ち50枚=約31G、平均純増や有利区間の状態を平均とした概算。朝一は600Gを超えたら据え置きの可能性が高まります。"},
+ {id:"i_mode",t:"🌏 規定G数・状態の示唆（設定示唆ではない）",rows:[
+   ["リンドウ/レンのセリフ","規定G数示唆"],
+   ["AT後99G以内の赤セリフ","100G選択の可能性大"],
+   ["リンドウのアイキャッチ","浅いG数なら早い当たり期待"],
+   ["ターミナル演出","キャラで規定G数示唆"],
+   ["作戦区域","AT/CZの前兆ステージ"],
+   ["バカンスモード","特殊高確。AT後スタートなら100G当選濃厚"]],
+  note:"やめどき判断用。記録タブの「演出/示唆」からメモできます（推測には非加算）。"}
+];
+var infoCol={};
+function rInfo(){var ct=document.getElementById("ct"),h='<div class="info">';
+ h+='<div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:10px;line-height:1.6">スマスロ ゴッドイーター リザレクション（山佐ネクスト／2024年7月22日導入）設定判別まとめ。複数攻略サイトの解析値をもとにしています。各項目タップで開閉。</div>';
+ for(var i=0;i<INFO.length;i++){var sec=INFO[i],cl=infoCol[sec.id];
+  h+='<div class="isec"><div class="isec-h" data-itog="'+sec.id+'"><div class="t">'+sec.t+'</div><span class="ar">'+(cl?'▶':'▼')+'</span></div>';
+  if(!cl){h+='<div class="isec-b">';
+   if(sec.custom==="base"){h+='<table class="itbl"><thead><tr><th>設定</th><th class="v">機械割</th><th class="v">AT初当り</th></tr></thead><tbody>';
+    for(var b=0;b<SETS.length;b++){var s=SETS[b];h+='<tr><td><span class="idot" style="background:'+SC[s]+'"></span>設'+s+'</td><td class="v" style="color:'+SC[s]+'">'+WARI[s]+(WARI[s]==="—"?"":"%")+'</td><td class="v" style="color:'+SC[s]+'">1/'+ATX[s]+'</td></tr>';}
+    h+='</tbody></table>';}
+   else if(sec.custom==="hit"){h+='<table class="itbl"><thead><tr><th>設定</th><th class="v">AT</th><th class="v">CZ合算</th></tr></thead><tbody>';
+    for(var c=0;c<SETS.length;c++){var s3=SETS[c];h+='<tr><td><span class="idot" style="background:'+SC[s3]+'"></span>設'+s3+'</td><td class="v" style="color:'+SC[s3]+'">1/'+ATX[s3]+'</td><td class="v" style="color:'+SC[s3]+'">1/'+CZX[s3]+'</td></tr>';}
+    h+='</tbody></table>';}
+   else{h+='<table class="itbl"><tbody>';
+    for(var j=0;j<sec.rows.length;j++){var row=sec.rows[j],lvl=row[2];
+     h+='<tr><td>'+(lvl?'<span class="idot" style="background:'+SC[lvl]+'"></span>':'')+row[0]+'</td><td class="v">'+(lvl?'<span class="ibadge" style="background:'+SC[lvl]+'">'+row[1]+'</span>':row[1])+'</td></tr>';}
+    h+='</tbody></table>';}
+   if(sec.note)h+='<div class="inote">'+sec.note+'</div>';
+   h+='</div>';}
+  h+='</div>';}
+ h+='</div>';ct.innerHTML=h}
+
+function rExp(){var ct=document.getElementById("ct"),E=estimate(),s=stats(),tG=totalG();
+ var t="━━ ゴッドイーター リザレクション ━━\n"+new Date().toLocaleString("ja-JP")+"\n\n【推定】\n";
+ if(E.used){t+="最有力: 設定"+E.best+" ("+(E.bestP*100).toFixed(0)+"%) / 期待値"+E.exp.toFixed(2)+"\n分布: ";
+  for(var i=0;i<SETS.length;i++)t+="設"+SETS[i]+" "+((E.post[SETS[i]]||0)*100).toFixed(0)+"% ";t+="\n";
+  t+="奇数"+(E.odd*100).toFixed(0)+"% / 偶数"+(E.even*100).toFixed(0)+"% / 設4以上"+(E.hi*100).toFixed(0)+"%\n";
+  if(E.conf.length){var rem=[];SETS.forEach(function(x){if(E.mask[x])rem.push(x)});
+   t+="★確定示唆: "+E.conf.join(" / ")+" → 残る設定 "+rem.join("・")+"\n";}
+  t+="根拠: "+E.reasons.join(" / ")+"\n";}else t+="データ不足\n";
+ t+="\n【集計】通常総G:"+tG+"（現在のハマり"+(parseInt(HAMARI)||0)+"G含む）\n";
+ if(tG>0&&s.at>0)t+="AT初当たり: 1/"+Math.round(tG/s.at)+" ("+s.at+"回)\n";
+ if(tG>0&&s.cz>0)t+="CZ: 1/"+Math.round(tG/s.cz)+" ("+s.cz+"回 うち殲滅"+s.senmetsu+") 成功"+s.czS+"\n";
+ if(CC.kyoT)t+="強チェ直撃: "+CC.kyoH+"/"+CC.kyoT+" ("+rate(CC.kyoH,CC.kyoT)+"%)\n";
+ if(CC.wCZ)t+="弱チェ/スイカ→CZ: "+CC.wCZ+"回\n";
+ if(CC.cmCZ)t+="チャンス目→CZ: "+CC.cmCZ+"回\n";
+ var sg=[];SIG.forEach(function(it){if(CC[it.k])sg.push(it.l+"×"+CC[it.k])});
+ if(sg.length)t+="示唆: "+sg.join(" / ")+"\n";
+ if(s.joui)t+="上位/特化: "+s.joui+"回\n";
+ if(s.mai)t+="獲得枚数合計: "+s.mai+"枚\n";
+ t+="\n【タイムライン】\n";
+ for(var j=0;j<LOG.length;j++){var e=LOG[j],ev=EVMAP[e.ev];
+  var gF=(e.ev==="at"&&e.g)?e.g+"G":"-";
+  t+=gF+"　"+(ev?ev.l:e.ev)+"　"+buildNote(e).replace(/<[^>]+>/g,"")+"\n";}
+ ct.innerHTML='<div class="exp"><div class="exp-h">長押し→すべて選択→コピー</div><textarea class="exp-ta" id="eTA" readonly>'+t.replace(/</g,"&lt;")+'</textarea></div>';
+ var ta=document.getElementById("eTA");if(ta){ta.focus();ta.setSelectionRange(0,ta.value.length)}}
+
+/* ===== アクション ===== */
+function addEntry(){if(!canAdd())return;var e={ev:curEv,ck:[]},ev=EVMAP[curEv];
+ function bump(k){if(k in CC){CC[k]++;e.ck.push(k)}}
+ if(ev.cat==="at"){e.kik=curKik;e.g=curG||"0";HAMARI="";}
+ if(ev.cat==="cz"){e.type=curType;e.kik=curKik;e.res=curRes;
+  if(curRes==="s"||curRes==="f"){ /* CZ突入自体をカウント */ }
+  if(curKik==="weak"||curKik==="suika"){bump("wT");bump("wCZ");}
+  if(curKik==="cm")bump("cmCZ");}
+ if(ev.cat==="kyo"){e.res=curRes;bump("kyoT");if(curRes==="hit")bump("kyoH");}
+ if(ev.cat==="atend"){
+  if(curScr){e.scr=curScr;if(curScr!=="none")bump(curScr)}
+  if(curVoice){e.voice=curVoice;if(curVoice!=="none")bump(curVoice)}
+  if(curConf){e.conf=curConf;if(curConf!=="none")bump(curConf)}
+  if(curMai)e.mai=curMai;}
+ if(ev.cat==="joui")e.type=curType;
+ if(ev.cat==="enshutsu"){e.encat=curCat;e.enopt=curOpt;
+  if(curCat==="timer"&&curOpt==="t6")bump("timer6");}
+ if(curNote)e.note=curNote;
+ LOG.push(e);
+ curEv=null;curG="";curKik=null;curType=null;curRes=null;curScr=null;curVoice=null;curConf=null;curMai="";curNote="";curCat=null;curOpt=null;
+ save();render()}
+
+function doRst(){if(!rstP){rstP=true;if(rstT)clearTimeout(rstT);rstT=setTimeout(function(){rstP=false;render()},3000);render();return}
+ LOG=[];initC();HAMARI="";save();rstP=false;render()}
+
+document.getElementById("W").addEventListener("click",function(ev){var el=ev.target;
+ for(var i=0;i<6&&el&&el!==this;i++){if(el.dataset){
+  if(el.dataset.tab){TAB=el.dataset.tab;render();return}
+  if(el.dataset.ev){curEv=(curEv===el.dataset.ev?null:el.dataset.ev);
+   curKik=null;curType=null;curRes=null;curScr=null;curVoice=null;curConf=null;curMai="";curCat=null;curOpt=null;
+   curG=(curEv==="at"?(HAMARI||""):"");render();return}
+  if(el.dataset.kik!==undefined){curKik=(curKik===el.dataset.kik?null:el.dataset.kik);render();return}
+  if(el.dataset.type!==undefined){curType=(curType===el.dataset.type?null:el.dataset.type);render();return}
+  if(el.dataset.res!==undefined){curRes=(curRes===el.dataset.res?null:el.dataset.res);render();return}
+  if(el.dataset.scr!==undefined){curScr=(curScr===el.dataset.scr?null:el.dataset.scr);render();return}
+  if(el.dataset.voice!==undefined){curVoice=(curVoice===el.dataset.voice?null:el.dataset.voice);render();return}
+  if(el.dataset.conf!==undefined){curConf=(curConf===el.dataset.conf?null:el.dataset.conf);render();return}
+  if(el.dataset.encat!==undefined){curCat=(curCat===el.dataset.encat?null:el.dataset.encat);curOpt=null;render();return}
+  if(el.dataset.enopt!==undefined){curOpt=(curOpt===el.dataset.enopt?null:el.dataset.enopt);render();return}
+  if(el.dataset.a==="add"){addEntry();return}
+  if(el.dataset.del!==undefined){var rm=LOG.splice(parseInt(el.dataset.del),1)[0];
+   if(rm&&rm.ck)rm.ck.forEach(function(k){if(CC[k]>0)CC[k]--});save();render();return}
+  if(el.dataset.tgl){USE_SOFT=!USE_SOFT;save();render();return}
+  if(el.dataset.tog){COL[el.dataset.tog]=!COL[el.dataset.tog];render();return}
+  if(el.dataset.itog){infoCol[el.dataset.itog]=!infoCol[el.dataset.itog];render();return}
+  if(el.dataset.ci){CC[el.dataset.ci]++;save();render();return}
+  if(el.dataset.cd){if(CC[el.dataset.cd]>0)CC[el.dataset.cd]--;save();render();return}
+ }el=el.parentElement}});
+document.getElementById("W").addEventListener("input",function(ev){
+ if(ev.target.id==="iH"){HAMARI=ev.target.value;save();rEst();rQS();
+  var g=document.querySelector(".gtot b");if(g)g.textContent=totalG();return}
+ if(ev.target.id==="iG")curG=ev.target.value;
+ if(ev.target.id==="iN")curNote=ev.target.value;
+ if(ev.target.id==="iMai")curMai=ev.target.value});
+
+load();render();
+</script>
+</body>
+</html>
