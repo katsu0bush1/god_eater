@@ -154,7 +154,13 @@ var CHOKU={1:.004,2:.012,3:.024,4:.043,5:.051,6:.059};
 var WEAK={1:.002,2:.004,3:.006,4:.008,5:.010,6:.012};
 var WEAKR={1:0.2,2:0.4,3:0.6,4:0.8,5:1.0,6:1.2};
 /* 準確定示唆（実戦上の情報や「濃厚!?」表記）の重み。設定を切り捨てず強く傾けるだけ */
+/* ★ 根拠のない数値を尤度に入れないためのスイッチ（2026-10-19 新設）。
+   どちらも「設定1しか判明していない／そもそも数値が非公開」で、表の中身は等差＝自前の推定。
+   既定 false＝**推測には使わない**。実験したいときだけ true にする。 */
+var USE_ZONE=false, USE_WEAK=false;
 var QPEN=0.08;
+/* 準確定示唆を何回ぶんまで効かせるか。無制限だと数回で実質ハード制約になる */
+var QUASI_CAP=2;
 /* 示唆演出の「低設定（ほぼ設定1）における出現割合」＝実測値。
    これが無いと『示唆が出た時だけ加点し、デフォルトが出た時に減点しない』片側評価になり、
    打てば打つほど高設定に寄ってしまうため、正規化に使用する。
@@ -323,7 +329,11 @@ function estimate(){
   for(i=0;i<SETS.length;i++){s=SETS[i];var p=1/ATX[s];ll[s]+=st.at*Math.log(p)+(tG-st.at)*Math.log(1-p);}
   reasons.push("AT初当たり 1/"+Math.round(tG/st.at));}
  // 規定Gゾーン当選率（AT記録のG数から自動判定。CZ経由等でゾーン内当選した回は打ち切り扱いで除外）
- ZONE.forEach(function(z){var tr=0,hk=0;
+ /* ⚠️ 2026-10-19 是正: ZONE の当選率は **.080/.094/.108/.122/.136/.150 と完全な等差**＝
+    解析値ではなく自前の線形推定。なな徹・ちょんぼりすたとも「高設定ほど当選率が高い」と
+    書くだけで数値は非公開。根拠のない数値で尤度を作ると、**実在しない設定差を主張する**ことになる。
+    → 尤度からは外し、集計は「参考表示」として残す（USE_ZONE=false）。 */
+ if(USE_ZONE)ZONE.forEach(function(z){var tr=0,hk=0;
   for(var j=0;j<LOG.length;j++){var e=LOG[j];if(e.ev!=="at")continue;var g=parseInt(e.g)||0;
    if(g<z.lo)continue;
    if(g<=z.hi){if(e.kik==="g"){tr++;hk++}}
@@ -338,18 +348,26 @@ function estimate(){
  // 強チェリー直撃（分母あり＝正規の二項）
  if(CC.kyoT>0)bino(Math.min(CC.kyoH,CC.kyoT),CC.kyoT,CHOKU,"強チェ直撃");
  // 弱チェ/スイカ→CZ：外した回数まで入っている時だけ正規の二項、そうでなければ減衰した出現比
- if(CC.wT>CC.wCZ)bino(CC.wCZ,CC.wT,WEAK,"弱チェ/スイカ→CZ");
- else if(CC.wCZ>0){used=true;
-  for(i=0;i<SETS.length;i++){s=SETS[i];ll[s]+=0.5*CC.wCZ*Math.log(WEAKR[s]);}
-  reasons.push("弱チェ/スイカ→CZ "+CC.wCZ+"回（母数不足・減衰）");}
+ /* ⚠️ 2026-10-19 是正: 厳密不等号だと**全部当選（5/5 等）を捨てて**減衰パスに落ちていた。
+    分母が入っていれば正規の二項で扱う。減衰パスは「分母を数えていない」ときだけ。 */
+ /* ⚠️ 2026-10-19 是正: WEAK は .002/.004/.006/.008/.010/.012 の**完全な等差**、
+    WEAKR は 0.2〜1.2 の等差＝どちらも解析値ではなく自前の推定。尤度から外した。
+    記録は残す（回数は画面に出る）が、設定の根拠には使わない。 */
+ if(USE_WEAK){
+  if(CC.wT>0&&CC.wCZ<=CC.wT)bino(CC.wCZ,CC.wT,WEAK,"弱チェ/スイカ→CZ");
+  else if(CC.wCZ>0){used=true;
+   for(i=0;i<SETS.length;i++){s=SETS[i];ll[s]+=0.5*CC.wCZ*Math.log(WEAKR[s]);}
+   reasons.push("弱チェ/スイカ→CZ "+CC.wCZ+"回（母数不足・減衰）");}}
  // 示唆演出（ハード制約 / 準確定の重み / 推定重み）
  SIG.forEach(function(it){var n=CC[it.k];if(!n)return;
   if(it.m){var mm={};it.m.forEach(function(x){mm[x]=1});
    for(i=0;i<SETS.length;i++)if(!mm[SETS[i]])mask[SETS[i]]=false;
    conf.push(it.l+"→"+it.h);used=true;}
   else if(it.q){used=true;
-   for(i=0;i<SETS.length;i++){s=SETS[i];if(s<it.q)ll[s]+=n*Math.log(QPEN);}
-   conf.push(it.l+"→"+it.h);}
+   /* ⚠️ 2026-10-19 是正: 回数で累乗していたため、準確定を数回見ると実質ハード制約になっていた */
+   var nq=Math.min(n,QUASI_CAP);
+   for(i=0;i<SETS.length;i++){s=SETS[i];if(s<it.q)ll[s]+=nq*Math.log(QPEN);}
+   conf.push(it.l+"→"+it.h+(n>QUASI_CAP?("×"+n+"→上限"+QUASI_CAP):""));}
   else if(it.soft&&USE_SOFT){used=true;
    for(i=0;i<SETS.length;i++){s=SETS[i];ll[s]+=n*Math.log(SOFT[it.soft][s]);}}});
  // 正規化：デフォルト（示唆なし）が出たことも「高設定ではない証拠」として引く
